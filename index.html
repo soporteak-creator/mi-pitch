@@ -3,223 +3,809 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Veritas.cl · Pitch Decks</title>
-  <link rel="stylesheet" href="shared/css/base.css" />
+  <meta name="description" content="VeriSmart — Propuesta de migración de infraestructura para Veritas.cl" />
+  <title>VeriSmart · Migración de Infraestructura · Veritas.cl</title>
+
+  <!-- Preconnect fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/shared/css/base.css" />
+  <link rel="stylesheet" href="css/theme.css" />
+
+  <!-- GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" defer></script>
+
   <style>
-    body { background: var(--color-bg); }
+    /* ── Page-local overrides ── */
 
-    .landing-nav {
-      padding: var(--space-6) var(--section-pad-x);
-      display: flex; align-items: center;
-      border-bottom: 1px solid var(--color-border);
-      background: var(--color-surface);
-    }
-    .landing-logo {
-      font-family: var(--font-display);
-      font-size: var(--text-2xl);
-      font-weight: 700;
-      color: #1B3F8B;
-    }
-    .landing-logo span { opacity: .4; margin: 0 var(--space-2); }
-
-    .landing-hero {
-      padding: var(--space-24) var(--section-pad-x) var(--space-16);
-      max-width: var(--container-max);
-      margin-inline: auto;
-    }
-    .landing-hero .label { margin-bottom: var(--space-4); }
-    .landing-hero h1 {
-      font-size: clamp(2rem, 5vw, 3.5rem);
-      margin-bottom: var(--space-4);
-    }
-    .landing-hero p {
-      font-size: var(--text-lg);
-      color: var(--color-text-muted);
-    }
-
-    .presentations-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: var(--space-6);
-      max-width: var(--container-max);
-      margin-inline: auto;
-      padding: 0 var(--section-pad-x) var(--space-24);
-    }
-
-    .pres-card {
-      background: var(--color-surface);
-      border: 1.5px solid var(--color-border);
-      border-radius: var(--radius-xl);
+    /* Hero */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: var(--sp-24) var(--pad-x) var(--sp-20);
+      position: relative;
       overflow: hidden;
-      transition: all 300ms cubic-bezier(.16,1,.3,1);
-      cursor: pointer;
-      text-decoration: none;
-      color: inherit;
-      display: block;
+    }
+
+    .hero__content { position: relative; z-index: 2; }
+
+    /* Problems grid */
+    .problems-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--sp-5);
+    }
+
+    /* Chart wrapper */
+    .chart-box {
+      position: relative;
+      height: 340px;
+      background: var(--c-bg-card);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-lg);
+      padding: var(--sp-8);
       box-shadow: var(--shadow-sm);
     }
-    .pres-card:hover {
-      transform: translateY(-6px);
-      border-color: #1B3F8B;
-      box-shadow: var(--shadow-lg);
-    }
-    .pres-card__cover {
-      height: 180px;
-      display: flex; align-items: center; justify-content: center;
-      font-family: var(--font-display);
-      font-size: 4rem;
-      font-weight: 700;
-      letter-spacing: -.04em;
-      position: relative;
-      overflow: hidden;
-    }
-    .pres-card__cover--verismart {
-      background: linear-gradient(135deg, #0C1D4A 0%, #1B3F8B 60%, #2A5CC5 100%);
-      color: rgba(255,255,255,.12);
-    }
-    .pres-card__cover--verismart::after {
-      content: 'VS';
-      position: absolute;
-      font-size: 8rem;
-      color: rgba(255,255,255,.06);
-      bottom: -20px;
-      right: 10px;
-    }
-    .pres-card__cover-badge {
-      position: absolute;
-      top: var(--space-4); left: var(--space-4);
-      background: rgba(255,255,255,.15);
-      backdrop-filter: blur(8px);
-      color: #fff;
-      font-family: var(--font-body);
-      font-size: var(--text-xs);
-      font-weight: 600;
-      padding: 4px 10px;
-      border-radius: 100px;
-      border: 1px solid rgba(255,255,255,.2);
-    }
-    .pres-card__cover-icon {
-      font-size: 3rem;
-      position: relative;
-      z-index: 1;
-    }
-    .pres-card__body { padding: var(--space-6); }
-    .pres-card__meta {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: var(--space-3);
-    }
-    .pres-card__title {
-      font-family: var(--font-display);
-      font-size: var(--text-xl);
-      font-weight: 700;
-      margin-bottom: var(--space-2);
-    }
-    .pres-card__desc {
-      font-size: var(--text-sm);
-      color: var(--color-text-muted);
-      line-height: 1.6;
-      max-width: none;
-    }
-    .pres-card__footer {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: var(--space-4) var(--space-6);
-      border-top: 1px solid var(--color-border);
-      font-size: var(--text-sm);
-      color: var(--color-text-muted);
-    }
-    .pres-card__cta {
-      font-size: var(--text-sm);
-      font-weight: 600;
-      color: #1B3F8B;
-      display: flex; align-items: center; gap: 4px;
+
+    /* Arch diagram */
+    .arch-col {
+      display: flex;
+      flex-direction: column;
     }
 
-    /* placeholder card */
-    .pres-card--placeholder {
-      background: var(--color-surface-2);
-      border: 2px dashed var(--color-border);
-      box-shadow: none;
-    }
-    .pres-card--placeholder:hover {
-      transform: none;
-      border-color: #1B3F8B;
-      box-shadow: none;
-    }
-    .pres-card--placeholder .pres-card__cover {
-      background: transparent;
-      color: var(--color-text-muted);
+    .arch-box {
+      background: var(--c-bg-card);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-md);
+      padding: 16px 20px;
+      box-shadow: var(--shadow-xs);
     }
 
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(24px); }
-      to   { opacity: 1; transform: translateY(0); }
+    .arch-box--blue {
+      border-color: rgba(24,65,200,0.25);
+      background: rgba(24,65,200,0.03);
     }
-    .pres-card { animation: fadeInUp .5s var(--ease-out) both; }
-    .pres-card:nth-child(1) { animation-delay: .1s; }
-    .pres-card:nth-child(2) { animation-delay: .2s; }
-    .pres-card:nth-child(3) { animation-delay: .3s; }
+
+    .arch-box--teal {
+      border-color: rgba(11,167,147,0.25);
+      background: rgba(11,167,147,0.03);
+    }
+
+    .arch-box--wrap {
+      border: 2px dashed rgba(255,153,0,0.3);
+      background: rgba(255,153,0,0.02);
+      border-radius: var(--r-lg);
+      padding: var(--sp-5);
+    }
+
+    .arch-box--wrap-new {
+      border: 2px dashed rgba(24,65,200,0.25);
+      background: rgba(24,65,200,0.02);
+      border-radius: var(--r-lg);
+      padding: var(--sp-5);
+    }
+
+    .arch-tag {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      font-weight: 500;
+      color: var(--c-text-3);
+      margin-bottom: var(--sp-3);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .arch-name {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+    }
+
+    .arch-detail {
+      font-size: 0.8rem;
+      color: var(--c-text-3);
+      line-height: 1.5;
+    }
+
+    /* KPI section dark */
+    #section-kpis { background: var(--c-dark); color: var(--c-text-inv); }
+
+    /* Cost section */
+    .costs-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--sp-6);
+      align-items: start;
+    }
+
+    /* Improvements */
+    #impr-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--sp-5);
+    }
+
+    /* Closing */
+    #section-closing {
+      background: var(--c-dark);
+      color: var(--c-text-inv);
+      text-align: center;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* KPI target compare */
+    .kpi-grid-sm {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--sp-4);
+    }
+
+    /* Highlight note box */
+    .note-box {
+      background: rgba(24,65,200,0.06);
+      border: 1px solid rgba(24,65,200,0.18);
+      border-radius: var(--r-md);
+      padding: var(--sp-5) var(--sp-6);
+    }
+
+    .note-box--red {
+      background: rgba(229,62,62,0.05);
+      border-color: rgba(229,62,62,0.18);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .problems-grid { grid-template-columns: 1fr; }
+      .costs-grid    { grid-template-columns: 1fr; }
+      #impr-grid     { grid-template-columns: repeat(2, 1fr); }
+      .kpi-compare   { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 480px) {
+      #impr-grid        { grid-template-columns: 1fr; }
+      .kpi-grid-sm      { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
 
-<nav class="landing-nav">
-  <div class="landing-logo">Veritas <span>/</span> Presentaciones</div>
-</nav>
+<!-- ── Progress bar ── -->
+<div id="progress-bar"></div>
 
-<div class="landing-hero">
-  <div class="label label--accent">Centro de presentaciones</div>
-  <h1>Pitch Decks interactivos</h1>
-  <p>Selecciona una presentación para ver la propuesta completa.</p>
-</div>
+<!-- ── Navigation ── -->
+<nav class="nav" id="main-nav">
+  <a href="/index.html" class="veritas-logo">Veritas<em>.</em></a>
 
-<div class="presentations-grid">
-
-  <!-- VeriSmart -->
-  <a href="brands/verismart/index.html" class="pres-card">
-    <div class="pres-card__cover pres-card__cover--verismart">
-      <span class="pres-card__cover-badge">Infraestructura</span>
-      <span class="pres-card__cover-icon">🚀</span>
-    </div>
-    <div class="pres-card__body">
-      <div class="pres-card__meta">
-        <span class="badge badge--accent">Técnico</span>
-        <span class="badge badge--success">Listo</span>
-      </div>
-      <div class="pres-card__title">VeriSmart · Migración de Servidor</div>
-      <p class="pres-card__desc">
-        Propuesta para migrar VeriSmart de AWS a Railway. Stack Vue.js + Node.js +
-        MongoDB + Docker. Ahorro proyectado: $17.820 USD/año.
-      </p>
-    </div>
-    <div class="pres-card__footer">
-      <span>7 secciones · 2025</span>
-      <span class="pres-card__cta">Ver presentación →</span>
-    </div>
-  </a>
-
-  <!-- Placeholder 2 -->
-  <div class="pres-card pres-card--placeholder">
-    <div class="pres-card__cover">
-      <span style="font-size:3rem;">+</span>
-    </div>
-    <div class="pres-card__body">
-      <div class="pres-card__meta">
-        <span class="badge badge--warning">Próximamente</span>
-      </div>
-      <div class="pres-card__title">Nueva presentación</div>
-      <p class="pres-card__desc">
-        Agrega nuevas presentaciones creando una carpeta en
-        <code style="font-size:11px;background:var(--color-surface-2);padding:2px 6px;border-radius:4px;">/brands/nombre/</code>
-        y enlazando desde este index.
-      </p>
-    </div>
-    <div class="pres-card__footer">
-      <span>Plantilla disponible</span>
-      <span class="pres-card__cta" style="color:var(--color-text-muted);">Próximamente</span>
-    </div>
+  <div class="nav__links">
+    <a href="#section-stack">Stack</a>
+    <a href="#section-problems">Problemas</a>
+    <a href="#section-comparison">Comparativa</a>
+    <a href="#section-roadmap">Roadmap</a>
+    <a href="#section-closing">Propuesta</a>
   </div>
 
-</div>
+  <a href="#section-closing" class="nav__cta">Ver propuesta →</a>
+</nav>
 
+
+<!-- ════════════════════════════════════════════
+     §1 · HERO
+     ════════════════════════════════════════════ -->
+<section class="hero" id="section-hero" data-nav-dark>
+  <!-- Backgrounds -->
+  <div class="hero-bg"></div>
+  <div class="hero-mesh"></div>
+  <div class="hero-grid"></div>
+
+  <div class="hero__content">
+    <!-- Eyebrow -->
+    <div class="eyebrow hero-reveal">
+      <span class="eyebrow__dot"></span>
+      VERITAS.CL &nbsp;·&nbsp; DOCUMENTO INTERNO &nbsp;·&nbsp; 2025
+    </div>
+
+    <!-- Title -->
+    <h1 class="hero-title hero-reveal">
+      VeriSmart
+      <span class="hero-title__sub">Propuesta de Migración<br/>de Infraestructura</span>
+    </h1>
+
+    <!-- Description -->
+    <p class="hero-desc hero-reveal">
+      La plataforma VeriSmart ha alcanzado los límites físicos de su infraestructura actual en AWS Lightsail.
+      Este documento analiza el problema, evalúa alternativas y propone un plan de migración concreto
+      hacia una arquitectura moderna, resiliente y económicamente sostenible.
+    </p>
+
+    <!-- Tech chips -->
+    <div class="flex flex-wrap gap-2 mb-10 hero-reveal">
+      <span class="chip">🐳 Docker Compose</span>
+      <span class="chip">◈ Vue 3 + Vite</span>
+      <span class="chip">◉ Node.js 20</span>
+      <span class="chip chip--blue">🍃 MongoDB Atlas M0</span>
+      <span class="chip chip--blue">☁️ AWS Lightsail</span>
+    </div>
+
+    <!-- Scroll cue -->
+    <div class="scroll-cue hero-reveal">
+      <span class="scroll-cue__line"></span>
+      SCROLL PARA CONTINUAR
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════
+     §2 · STACK ACTUAL
+     ════════════════════════════════════════════ -->
+<section class="section" id="section-stack">
+  <div class="container" style="max-width:var(--max-w);margin:0 auto">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-16);align-items:center">
+
+      <!-- Left: narrative -->
+      <div class="gsap-up">
+        <div class="label">Stack Actual</div>
+        <h2 class="h-lg mb-5">Todo en un solo host</h2>
+        <div class="divider"></div>
+        <p style="color:var(--c-text-2);font-size:1rem;line-height:1.8;margin-bottom:var(--sp-8)">
+          VeriSmart está construida sobre un stack moderno —Vue 3, Node.js y MongoDB—
+          pero toda la aplicación vive en una sola instancia de AWS Lightsail via Docker Compose.
+          Esta decisión inicial fue pragmática, pero hoy es el principal cuello de botella.
+        </p>
+
+        <div class="flex flex-wrap gap-2 mb-8">
+          <span class="badge badge--green">Vue 3 / Vite</span>
+          <span class="badge badge--green">Node.js 20 LTS</span>
+          <span class="badge badge--green">Express API REST</span>
+          <span class="badge badge--red">MongoDB M0 (límite)</span>
+          <span class="badge badge--red">Lightsail $10/mo</span>
+          <span class="badge badge--amber">Docker Compose</span>
+        </div>
+
+        <div class="note-box note-box--red">
+          <p style="font-size:0.875rem;color:var(--c-red);font-weight:600;display:flex;align-items:center;gap:var(--sp-2)">
+            ⚠️ Si el host de Lightsail cae, toda la plataforma queda fuera de servicio.
+            Sin failover. Sin redundancia. Downtime total garantizado.
+          </p>
+        </div>
+      </div>
+
+      <!-- Right: stack diagram -->
+      <div class="gsap-up" style="padding:var(--sp-5);background:rgba(255,153,0,0.03);border:2px dashed rgba(255,153,0,0.25);border-radius:var(--r-xl)">
+        <div class="arch-tag" style="margin-bottom:var(--sp-4)">☁️ AWS LIGHTSAIL — $10/mo · 2 GB RAM · 1 vCPU · 60 GB SSD</div>
+
+        <div style="padding:var(--sp-4);background:rgba(13,132,225,0.04);border:2px dashed rgba(13,132,225,0.2);border-radius:var(--r-lg);margin-bottom:0">
+          <div class="arch-tag">🐳 DOCKER COMPOSE — host único, sin failover</div>
+          <div id="stack-diagram">
+            <!-- Filled by JS -->
+            <div style="text-align:center;padding:var(--sp-8);color:var(--c-text-3);font-size:0.85rem">Cargando diagrama...</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════
+     §3 · PROBLEMAS
+     ════════════════════════════════════════════ -->
+<section class="section section--alt" id="section-problems">
+  <div class="container" style="max-width:var(--max-w);margin:0 auto">
+
+    <div class="gsap-up text-center mb-12">
+      <div class="label" style="justify-content:center">Diagnóstico</div>
+      <h2 class="h-lg">¿Por qué necesitamos cambiar?</h2>
+      <p class="text-muted max-w-prose mx-auto mt-5" style="font-size:1rem">
+        La infraestructura actual presenta cuatro problemas críticos que ya están
+        afectando la confiabilidad y el crecimiento de VeriSmart.
+      </p>
+    </div>
+
+    <div class="problems-grid gsap-stagger" id="problems-grid">
+      <!-- Filled by JS -->
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════
+     §4 · KPIs ACTUALES (PINNED)
+     ════════════════════════════════════════════ -->
+<section class="section section--dark" id="section-kpis">
+  <div class="container" style="max-width:var(--max-w);margin:0 auto">
+
+    <div class="gsap-up text-center mb-12">
+      <div class="label" style="justify-content:center">Estado Actual</div>
+      <h2 class="h-lg">Los números que importan</h2>
+      <p class="text-muted-inv max-w-prose mx-auto mt-5">
+        Métricas reales de la infraestructura VeriSmart hoy.
+      </p>
+    </div>
+
+    <div class="grid-4">
+      <div class="kpi-card kpi-card--dark">
+        <div class="kpi-value kpi-value--danger"
+             data-counter="85" data-suffix="%" data-duration="1800">0</div>
+        <div class="kpi-label">RAM en uso</div>
+      </div>
+      <div class="kpi-card kpi-card--dark">
+        <div class="kpi-value kpi-value--danger"
+             data-counter="90" data-suffix="%" data-duration="2000">0</div>
+        <div class="kpi-label">Storage MongoDB</div>
+      </div>
+      <div class="kpi-card kpi-card--dark">
+        <div class="kpi-value kpi-value--neutral"
+             data-counter="10" data-prefix="$" data-suffix="/mo" data-duration="1200">$0</div>
+        <div class="kpi-label">Costo mensual</div>
+      </div>
+      <div class="kpi-card kpi-card--dark">
+        <div class="kpi-value kpi-value--danger"
+             data-counter="0" data-suffix="%" data-duration="500">0%</div>
+        <div class="kpi-label">Redundancia</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════
+     §5 · GRÁFICO DE TENDENCIA
+     ════════════════════════════════════════════ -->
+<section class="section" id="section-chart">
+  <div class="container" style="max-width:var(--max-w);margin:0 auto">
+    <div style="display:grid;grid-template-columns:1fr 1.65fr;gap:var(--sp-16);align-items:center">
+
+      <!-- Left -->
+      <div class="gsap-up">
+        <div class="label">Tendencia</div>
+        <h2 class="h-lg mb-5">Los recursos se agotan cada mes</h2>
+        <div class="divider"></div>
+        <p style="color:var(--c-text-2);font-size:0.95rem;line-height:1.8;margin-bottom:var(--sp-8)">
+          En los últimos 7 meses, el uso de RAM y storage ha crecido de forma constante.
+          A este ritmo, el servidor alcanzará su límite de colapso antes de agosto 2025
+          si no se toman acciones.
+        </p>
+
+        <div class="note-box note-box--red mb-5">
+          <p style="font-size:0.82rem;color:var(--c-red);font-weight:600">
+            ⚠️ Proyección: 95–97% de recursos en agosto 2025
+          </p>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:var(--sp-3)">
+          <div style="display:flex;align-items:center;gap:var(--sp-3)">
+            <div style="width:12px;height:12px;border-radius:50%;background:var(--c-red);flex-shrink:0"></div>
+            <span style="font-size:0.85rem;color:var(--c-text-2)">RAM en uso</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:var(--sp-3)">
+            <div style="width:12px;height:12px;border-radius:50%;background:var(--c-teal);flex-shrink:0"></div>
+            <span style="font-size:0.85rem;color:var(--c-text-2)">Storage MongoDB</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: chart -->
+      <div class="gsap-up chart-box">
+        <canvas id="usage-chart"></canvas>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════
+     §6 · COMPARATIVA
+     ════════════════════════════════════════════ -->
+<section class="section section--alt" id="section-comparison">
+  <div class="container" style="max-width:var(--max-w);margin:0 auto">
+
+    <div class="gsap-up text-center mb-12">
+      <div class="label" style="justify-content:center">Alternativas</div>
+      <h2 class="h-lg">¿A dónde migramos?</h2>
+      <p class="text-muted max-w-prose mx-auto mt-5">
+        Comparativa de las principales plataformas con soporte Docker nativo,
+        evaluadas por costo, rendimiento y facilidad de migración desde el stack actual.
+      </p>
+    </div>
+
+    <div class="table-wrap gsap-up mb-8">
+      <table>
+        <thead id="comp-thead">
+          <!-- Filled by JS -->
+        </thead>
+        <tbody id="comp-tbody">
+          <!-- Filled by JS -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Recommendation highlight -->
+    <div class="note-box gsap-up">
+      <div style="display:flex;align-items:flex-start;gap:var(--sp-5)">
+        <div style="font-size:2.25rem;flex-shrink:0">🏆</div>
+        <div>
+          <div style="font-family:var(--font-display);font-weight:700;font-size:1.15rem;margin-bottom:var(--sp-2)">
+            Recomendación: <span class="text-accent">Railway</span>
+          </div>
+          <p style="color:var(--c-text-2);font-size:0.9rem;line-height:1.7;max-width:740px">
+            Railway ofrece el mejor balance costo/rendimiento para VeriSmart. Deploy automático desde GitHub,
+            soporte nativo de <code style="font-family:var(--font-mono);font-size:0.85em">docker-compose.yml</code>,
+            plugin oficial de MongoDB con 1 GB incluido (vs 512 MB en Atlas M0),
+            y 8 GB RAM por ~$20/mes. La migración desde Lightsail es directa — Railway
+            puede leer el compose existente sin cambios mayores.
+          </p>
+          <div class="flex flex-wrap gap-2 mt-5">
+            <span class="badge badge--green">Deploy desde GitHub</span>
+            <span class="badge badge--green">Docker Compose nativo</span>
+            <span class="badge badge--green">MongoDB 1 GB incluido</span>
+            <span class="badge badge--green">8 GB RAM</span>
+            <span class="badge badge--green">CI/CD automático</span>
+            <span class="badge badge--green">SSL automático</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════
+     §7 · ARQUITECTURA PROPUESTA
+     ════════════════════════════════════════════ -->
+<section class="section" id="section-arch">
+  <div class="container" style="max-width:var(--max-w);margin:0 auto">
+
+    <div class="gsap-up mb-12">
+      <div class="label">Arquitectura Propuesta</div>
+      <h2 class="h-lg mb-5">De host único a tres capas independientes</h2>
+      <p class="text-muted" style="max-width:640px;font-size:1rem;line-height:1.75">
+        La arquitectura propuesta separa frontend, backend y base de datos en servicios
+        independientes con responsabilidades claras, CI/CD automático y alta disponibilidad.
+      </p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-10);align-items:start" id="arch-boxes">
+
+      <!-- ANTES -->
+      <div>
+        <div style="font-family:var(--font-display);font-size:0.9rem;font-weight:700;color:var(--c-text-3);margin-bottom:var(--sp-5)">
+          ANTES — Monolito en Lightsail
+        </div>
+        <div class="arch-box--wrap">
+          <div class="arch-tag">☁️ AWS Lightsail — único punto de fallo</div>
+          <div class="arch-box" style="margin-bottom:4px">
+            <div class="arch-name">◈ Vue 3 Frontend</div>
+            <div class="arch-detail">Mismo servidor — comparte RAM con backend</div>
+          </div>
+          <div class="arch-arrow">↕</div>
+          <div class="arch-box" style="margin-bottom:4px">
+            <div class="arch-name">◉ Node.js Backend</div>
+            <div class="arch-detail">Mismo servidor — comparte RAM con frontend</div>
+          </div>
+          <div class="arch-arrow">↕</div>
+          <div class="arch-box">
+            <div class="arch-name">🍃 MongoDB Atlas M0</div>
+            <div class="arch-detail">512 MB límite · 90% ocupado · externo</div>
+          </div>
+        </div>
+        <div class="note-box note-box--red mt-5">
+          <p style="font-size:0.8rem;color:var(--c-red);font-weight:600">
+            Cualquier fallo = toda la plataforma offline
+          </p>
+        </div>
+      </div>
+
+      <!-- DESPUÉS -->
+      <div>
+        <div style="font-family:var(--font-display);font-size:0.9rem;font-weight:700;color:var(--c-teal);margin-bottom:var(--sp-5)">
+          DESPUÉS — Tres capas independientes
+        </div>
+        <div class="arch-box--wrap-new" style="display:flex;flex-direction:column;gap:var(--sp-2)">
+          <!-- Vercel -->
+          <div class="arch-box arch-box--blue">
+            <div class="arch-tag">▲ VERCEL — CDN global · gratuito</div>
+            <div class="arch-name">Vue 3 Frontend</div>
+            <div class="arch-detail">Build estático · Edge nodes globales · sub-1s carga</div>
+            <span class="badge badge--green mt-3" style="margin-top:8px">Gratis</span>
+          </div>
+
+          <div class="arch-arrow">↕ &nbsp;API HTTPS</div>
+
+          <!-- Railway backend -->
+          <div class="arch-box arch-box--blue">
+            <div class="arch-tag">🚂 RAILWAY — Backend · 8 GB RAM</div>
+            <div class="arch-name">Node.js + Express</div>
+            <div class="arch-detail">CI/CD automático desde GitHub · Secrets seguros · SSL</div>
+            <span class="badge badge--blue mt-3" style="margin-top:8px">~$20/mo</span>
+          </div>
+
+          <div class="arch-arrow">↕ &nbsp;Internal Network</div>
+
+          <!-- MongoDB Railway -->
+          <div class="arch-box arch-box--teal">
+            <div class="arch-tag">🍃 RAILWAY PLUGIN — MongoDB</div>
+            <div class="arch-name">MongoDB 1 GB</div>
+            <div class="arch-detail">Misma red interna · Backups automáticos · Sin costo extra</div>
+            <span class="badge badge--green mt-3" style="margin-top:8px">Incluido en plan</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════
+     §8 · ROADMAP
+     ════════════════════════════════════════════ -->
+<section class="section section--alt" id="section-roadmap">
+  <div class="container" style="max-width:var(--max-w);margin:0 auto">
+    <div style="display:grid;grid-template-columns:1fr 1.4fr;gap:var(--sp-16);align-items:start">
+
+      <!-- Left: summary -->
+      <div class="gsap-up">
+        <div class="label">Plan de Migración</div>
+        <h2 class="h-lg mb-5">7 semanas hacia una infraestructura moderna</h2>
+        <div class="divider"></div>
+        <p style="color:var(--c-text-2);font-size:0.95rem;line-height:1.8;margin-bottom:var(--sp-8)">
+          El plan está diseñado para minimizar riesgo y downtime. Cada fase es
+          independiente, tiene rollback definido y se valida antes de avanzar.
+          El go-live finaliza con la baja definitiva de AWS Lightsail.
+        </p>
+
+        <!-- Mini KPIs del plan -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-4)">
+          <div class="kpi-card">
+            <div class="kpi-value" style="font-size:2.5rem;color:var(--c-blue)"
+                 data-counter="7" data-duration="1200">0</div>
+            <div class="kpi-label">Semanas</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-value" style="font-size:2.5rem;color:var(--c-teal)"
+                 data-counter="5" data-duration="900">0</div>
+            <div class="kpi-label">Fases</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-value" style="font-size:2.5rem;color:var(--c-text-3)"
+                 data-counter="0" data-duration="500">0</div>
+            <div class="kpi-label">Downtime</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: roadmap list -->
+      <div class="roadmap" id="roadmap-list">
+        <!-- Filled by JS -->
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════
+     §9 · MEJORAS ADICIONALES
+     ════════════════════════════════════════════ -->
+<section class="section" id="section-improvements">
+  <div class="container" style="max-width:var(--max-w);margin:0 auto">
+
+    <div class="gsap-up text-center mb-12">
+      <div class="label" style="justify-content:center">Beneficios Adicionales</div>
+      <h2 class="h-lg">No solo migramos, mejoramos</h2>
+      <p class="text-muted max-w-prose mx-auto mt-5">
+        La migración es una oportunidad para incorporar mejoras que hoy son
+        imposibles con la arquitectura de host único en Lightsail.
+      </p>
+    </div>
+
+    <div id="impr-grid">
+      <!-- Filled by JS -->
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════
+     §10 · COMPARATIVA DE COSTOS
+     ════════════════════════════════════════════ -->
+<section class="section section--alt" id="section-costs">
+  <div class="container" style="max-width:var(--max-w);margin:0 auto">
+
+    <div class="gsap-up text-center mb-12">
+      <div class="label" style="justify-content:center">Análisis de Costos</div>
+      <h2 class="h-lg">El doble de recursos<br/>por $10 más al mes</h2>
+      <p class="text-muted max-w-prose mx-auto mt-5">
+        La propuesta no es solo técnicamente mejor: es económicamente razonable.
+        Compara el costo de un incidente de downtime vs $10 adicionales al mes.
+      </p>
+    </div>
+
+    <div class="costs-grid">
+      <div id="cost-current"></div>
+      <div id="cost-proposed"></div>
+    </div>
+
+    <!-- ROI note -->
+    <div class="note-box mt-8 gsap-up">
+      <div style="display:flex;align-items:center;gap:var(--sp-4)">
+        <div style="font-size:2rem;flex-shrink:0">💡</div>
+        <div>
+          <div style="font-family:var(--font-display);font-weight:700;font-size:1rem;margin-bottom:var(--sp-1)">
+            $10 adicionales = 4× más RAM + CI/CD + escalado automático + monitoreo
+          </div>
+          <p style="font-size:0.875rem;color:var(--c-text-2)">
+            Un solo incidente de downtime en producción cuesta más en soporte, pérdida de confianza
+            de clientes y deuda técnica que un año de diferencia en hosting. La inversión se amortiza
+            el primer mes.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════
+     §11 · KPIs OBJETIVO (ANTES vs DESPUÉS)
+     ════════════════════════════════════════════ -->
+<section class="section section--dark2" id="section-target" data-nav-dark>
+  <div class="container" style="max-width:var(--max-w);margin:0 auto">
+
+    <div class="gsap-up text-center mb-12">
+      <div class="label" style="justify-content:center">Resultado Esperado</div>
+      <h2 class="h-lg">De esto… a esto</h2>
+    </div>
+
+    <div class="kpi-compare">
+      <!-- Actual -->
+      <div>
+        <div class="kpi-compare__col-title" style="color:var(--c-red)">
+          <span>⚠</span> Estado Actual
+        </div>
+        <div class="kpi-grid-sm">
+          <div class="kpi-card kpi-card--dark">
+            <div class="kpi-value kpi-value--danger"
+                 data-counter="85" data-suffix="%">0</div>
+            <div class="kpi-label">RAM en uso</div>
+          </div>
+          <div class="kpi-card kpi-card--dark">
+            <div class="kpi-value kpi-value--danger"
+                 data-counter="90" data-suffix="%">0</div>
+            <div class="kpi-label">Storage DB</div>
+          </div>
+          <div class="kpi-card kpi-card--dark">
+            <div class="kpi-value kpi-value--neutral"
+                 data-counter="12" data-prefix="$" data-suffix="/mo">$0</div>
+            <div class="kpi-label">Costo total</div>
+          </div>
+          <div class="kpi-card kpi-card--dark">
+            <div class="kpi-value kpi-value--danger"
+                 data-counter="0" data-suffix="%">0</div>
+            <div class="kpi-label">Redundancia</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Objetivo -->
+      <div>
+        <div class="kpi-compare__col-title" style="color:var(--c-teal)">
+          <span>✓</span> Estado Objetivo
+        </div>
+        <div class="kpi-grid-sm">
+          <div class="kpi-card kpi-card--dark">
+            <div class="kpi-value kpi-value--success"
+                 data-counter="35" data-suffix="%">0</div>
+            <div class="kpi-label">RAM en uso</div>
+          </div>
+          <div class="kpi-card kpi-card--dark">
+            <div class="kpi-value kpi-value--success"
+                 data-counter="18" data-suffix="%">0</div>
+            <div class="kpi-label">Storage DB</div>
+          </div>
+          <div class="kpi-card kpi-card--dark">
+            <div class="kpi-value kpi-value--neutral"
+                 data-counter="22" data-prefix="$" data-suffix="/mo">$0</div>
+            <div class="kpi-label">Costo total</div>
+          </div>
+          <div class="kpi-card kpi-card--dark">
+            <div class="kpi-value kpi-value--success"
+                 data-counter="99.9" data-suffix="%">0</div>
+            <div class="kpi-label">Uptime SLA</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ════════════════════════════════════════════
+     §12 · CIERRE (PINNED)
+     ════════════════════════════════════════════ -->
+<section class="section section--dark" id="section-closing" data-nav-dark>
+  <div class="container" style="max-width:800px;margin:0 auto;display:flex;flex-direction:column;align-items:center;text-align:center">
+
+    <div class="closing-mark grad-blue closing-mark opacity-0">
+      Veritas<em>.</em>
+    </div>
+
+    <p class="closing-sub mt-8 opacity-0"
+       style="font-size:clamp(1.05rem,2.5vw,1.4rem);color:var(--c-text-inv-2);line-height:1.65;max-width:560px;margin-top:var(--sp-8);margin-bottom:0">
+      VeriSmart merece una infraestructura tan inteligente como la plataforma misma.
+      7 semanas, 5 fases, cero downtime en producción.
+    </p>
+
+    <div class="closing-actions flex flex-wrap gap-4 justify-center opacity-0" style="margin-top:var(--sp-10)">
+      <a href="#section-roadmap" class="cta-btn">Ver roadmap detallado →</a>
+      <a href="#section-comparison" class="cta-btn" style="background:rgba(255,255,255,0.08);backdrop-filter:blur(8px)">
+        Comparativa de plataformas
+      </a>
+    </div>
+
+    <div style="margin-top:var(--sp-16);display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:var(--sp-8);color:var(--c-text-inv-2);font-family:var(--font-mono);font-size:0.72rem">
+      <span>📅 Inicio estimado: Junio 2025</span>
+      <span>·</span>
+      <span>⏱ 7 semanas de desarrollo</span>
+      <span>·</span>
+      <span>💰 +$10/mo de inversión</span>
+      <span>·</span>
+      <span>🏢 Veritas.cl · Tecnología</span>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ── Footer ── -->
+<footer style="background:#060C18;padding:var(--sp-8) var(--pad-x);text-align:center">
+  <p style="font-family:var(--font-mono);font-size:0.72rem;color:rgba(255,255,255,0.18)">
+    VeriSmart Pitch Deck · Veritas.cl · 2025 · Documento confidencial — Solo uso interno
+  </p>
+</footer>
+
+
+<!-- Scripts -->
+<script src="/shared/js/core.js"></script>
+<script src="js/main.js"></script>
+
+<script>
+  // Nav scroll state
+  (function() {
+    const nav = document.getElementById('main-nav');
+    let ticking = false;
+
+    function updateNav() {
+      // Nav dark is handled by core.js initNavObserver
+      // Just add scrolled shadow
+      if (window.scrollY > 60) nav.style.boxShadow = 'var(--shadow-sm)';
+      else nav.style.boxShadow = 'none';
+      ticking = false;
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) { requestAnimationFrame(updateNav); ticking = true; }
+    }, { passive: true });
+  })();
+</script>
 </body>
 </html>
