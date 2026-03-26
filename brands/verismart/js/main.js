@@ -1,383 +1,364 @@
-/* =============================================================
-   VERISMART / MAIN.JS — GSAP + ScrollTrigger animations
-   ============================================================= */
+/* ==========================================================
+   main.js — Lógica VeriSmart · GSAP + ScrollTrigger
+   ========================================================== */
 
 'use strict';
 
-import {
-  initProgressBar,
-  initCounters,
-  initVideoAutoplay,
-  initVideoHover,
-  initNav,
-  initSmoothScroll,
-  initChartOnScroll
-} from '../../../shared/js/core.js';
+let D = null; // global data
 
-/* ── Data ── */
-let data = null;
+/* ──────────────────────────────────────────
+   Bootstrap
+   ────────────────────────────────────────── */
+async function init() {
+  try {
+    const res = await fetch('/data/verismart.json');
+    D = await res.json();
+  } catch (_) {
+    console.warn('[VeriSmart] JSON load failed — using static fallback');
+  }
 
-async function loadData() {
-  const res  = await fetch('../../../data/verismart.json');
-  data = await res.json();
+  buildDOM();
+  initGSAP();
+
+  // core.js helpers (called after DOM is ready)
+  staggerReveal('.hero-reveal', 80, 130);
 }
 
-/* ── GSAP setup ── */
-function setupGSAP() {
-  const { gsap, ScrollTrigger } = window;
-  gsap.registerPlugin(ScrollTrigger);
+/* ──────────────────────────────────────────
+   DOM Builders (data → HTML)
+   ────────────────────────────────────────── */
+function buildDOM() {
+  buildStackDiagram();
+  buildProblems();
+  buildComparisonTable();
+  buildRoadmap();
+  buildImprovements();
+  buildCostCards();
 
-  /* ─ Hero entrance ─ */
-  const heroTl = gsap.timeline({ defaults: { ease: 'power3.out' } });
-  heroTl
-    .from('.hero__eyebrow',  { y: 24, opacity: 0, duration: .7 })
-    .from('.hero__title',    { y: 40, opacity: 0, duration: .9 }, '-=.4')
-    .from('.hero__subtitle', { y: 30, opacity: 0, duration: .7 }, '-=.5')
-    .from('.hero__actions',  { y: 20, opacity: 0, duration: .6 }, '-=.4')
-    .from('.hero__scroll-hint', { opacity: 0, duration: .5 }, '-=.2');
+  // re-init core observers after dynamic content
+  initCounters();
+  initSeverityBars();
+  initRoadmap();
 
-  /* ─ Generic fade-up on sections ─ */
-  gsap.utils.toArray('.fade-up').forEach(el => {
-    gsap.to(el, {
-      y: 0, opacity: 1, duration: .8, ease: 'power3.out',
-      scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none none' }
-    });
-  });
-
-  gsap.utils.toArray('.slide-left').forEach(el => {
-    gsap.to(el, {
-      x: 0, opacity: 1, duration: .8, ease: 'power3.out',
-      scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none none' }
-    });
-  });
-
-  gsap.utils.toArray('.slide-right').forEach(el => {
-    gsap.to(el, {
-      x: 0, opacity: 1, duration: .8, ease: 'power3.out',
-      scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none none' }
-    });
-  });
-
-  gsap.utils.toArray('.fade-in').forEach(el => {
-    gsap.to(el, {
-      opacity: 1, duration: .9, ease: 'power2.out',
-      scrollTrigger: { trigger: el, start: 'top 88%', toggleActions: 'play none none none' }
-    });
-  });
-
-  /* ─ Stagger for grid children ─ */
-  document.querySelectorAll('.stagger-children').forEach(parent => {
-    gsap.from(parent.children, {
-      y: 32, opacity: 0, duration: .7, stagger: .1, ease: 'power3.out',
-      scrollTrigger: { trigger: parent, start: 'top 82%', toggleActions: 'play none none none' }
-    });
-  });
-
-  /* ─ Problem section — pinned ─ */
-  const problemSection = document.querySelector('#problem');
-  if (problemSection) {
-    ScrollTrigger.create({
-      trigger: problemSection,
-      start: 'top top',
-      end: '+=400',
-      pin: false,
-    });
-
-    gsap.from('.problem-item', {
-      x: -40, opacity: 0, duration: .6, stagger: .12, ease: 'power3.out',
-      scrollTrigger: {
-        trigger: '.problem-list',
-        start: 'top 80%',
-        toggleActions: 'play none none none'
-      }
-    });
-  }
-
-  /* ─ Stack layers stagger ─ */
-  gsap.from('.stack-layer', {
-    y: 30, opacity: 0, duration: .6, stagger: .08, ease: 'power3.out',
-    scrollTrigger: {
-      trigger: '.stack-diagram',
-      start: 'top 82%',
-      toggleActions: 'play none none none'
-    }
-  });
-
-  /* ─ Code block ─ */
-  gsap.from('.code-block', {
-    y: 40, opacity: 0, duration: .9, ease: 'power3.out',
-    scrollTrigger: {
-      trigger: '.code-block',
-      start: 'top 85%',
-      toggleActions: 'play none none none'
-    }
-  });
-
-  /* ─ Comparison table rows ─ */
-  gsap.from('.compare-table tbody tr', {
-    opacity: 0, x: -20, duration: .4, stagger: .06, ease: 'power2.out',
-    scrollTrigger: {
-      trigger: '.compare-table',
-      start: 'top 80%',
-      toggleActions: 'play none none none'
-    }
-  });
-
-  /* ─ Migration phases ─ */
-  gsap.from('.migration-phase', {
-    opacity: 0, y: 30, duration: .6, stagger: .15, ease: 'power3.out',
-    scrollTrigger: {
-      trigger: '.migration-timeline',
-      start: 'top 80%',
-      toggleActions: 'play none none none'
-    }
-  });
-
-  /* ─ Savings strip ─ */
-  gsap.from('.savings-stat', {
-    scale: .85, opacity: 0, duration: .6, stagger: .1, ease: 'back.out(1.6)',
-    scrollTrigger: {
-      trigger: '.savings-strip',
-      start: 'top 82%',
-      toggleActions: 'play none none none'
-    }
-  });
-
-  /* ─ Closing section ─ */
-  const closingSection = document.querySelector('#closing');
-  if (closingSection) {
-    const closingTl = gsap.timeline({
-      scrollTrigger: {
-        trigger: closingSection,
-        start: 'top 70%',
-        toggleActions: 'play none none none'
-      }
-    });
-    closingTl
-      .from('.closing-logo',         { scale: 1.3, opacity: 0, duration: 1, ease: 'power3.out' })
-      .from('.closing-content > *',  { y: 30, opacity: 0, duration: .7, stagger: .12, ease: 'power3.out' }, '-=.5');
-  }
-
-  /* ─ KPI cards ─ */
-  gsap.from('.kpi-card', {
-    scale: .92, opacity: 0, duration: .6, stagger: .08, ease: 'back.out(1.4)',
-    scrollTrigger: {
-      trigger: '.kpi-grid',
-      start: 'top 82%',
-      toggleActions: 'play none none none'
-    }
-  });
+  // Chart
+  if (D?.chartData) initGrowthChart('usage-chart', D.chartData);
 }
 
-/* ── Chart ── */
-function createCostChart(canvas) {
-  if (!data || !window.Chart) return;
-  const chart = data.growth_chart;
-  new window.Chart(canvas, {
-    type: 'line',
-    data: {
-      labels: chart.labels,
-      datasets: [
-        {
-          label: 'AWS (actual)',
-          data: chart.aws_cost,
-          borderColor: '#EF4444',
-          backgroundColor: 'rgba(239,68,68,.08)',
-          borderWidth: 2.5,
-          tension: 0.4,
-          fill: true,
-          pointRadius: 4,
-          pointBackgroundColor: '#EF4444',
-        },
-        {
-          label: 'Railway (propuesto)',
-          data: chart.railway_cost,
-          borderColor: '#1B3F8B',
-          backgroundColor: 'rgba(27,63,139,.08)',
-          borderWidth: 2.5,
-          tension: 0.4,
-          fill: true,
-          pointRadius: 4,
-          pointBackgroundColor: '#1B3F8B',
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { intersect: false, mode: 'index' },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#0C1D4A',
-          titleColor: '#fff',
-          bodyColor: 'rgba(255,255,255,.7)',
-          padding: 12,
-          cornerRadius: 8,
-          callbacks: {
-            label: ctx => ` ${ctx.dataset.label}: $${ctx.parsed.y.toLocaleString()} USD`
-          }
-        }
-      },
-      scales: {
-        x: {
-          grid: { color: 'rgba(0,0,0,.05)' },
-          ticks: { color: '#6B6860', font: { family: 'DM Sans', size: 12 } }
-        },
-        y: {
-          grid: { color: 'rgba(0,0,0,.05)' },
-          ticks: {
-            color: '#6B6860',
-            font: { family: 'DM Sans', size: 12 },
-            callback: v => '$' + v.toLocaleString()
-          },
-          beginAtZero: true
-        }
-      }
-    }
-  });
+/* Stack diagram */
+function buildStackDiagram() {
+  const el = document.getElementById('stack-diagram');
+  if (!el || !D?.currentStack) return;
+
+  const colorMap = {
+    Frontend: 'vue', Backend: 'node',
+    'Base Datos': 'mongo', Container: 'docker', Hosting: 'aws'
+  };
+
+  const statusBadge = s => s === 'ok'
+    ? `<span class="badge badge--green">OK</span>`
+    : s === 'crítico'
+    ? `<span class="badge badge--red">CRÍTICO</span>`
+    : `<span class="badge badge--amber">ALERTA</span>`;
+
+  const html = D.currentStack.map((layer, i) => `
+    ${i > 0 ? '<div class="stack-connector"></div>' : ''}
+    <div class="stack-block stack-block--${colorMap[layer.layer] || 'docker'}">
+      <div class="stack-block__left">
+        <div class="stack-block__tech">${layer.icon} ${layer.tech}</div>
+        <div class="stack-block__detail">${layer.layer} · ${layer.detail}</div>
+      </div>
+      ${statusBadge(layer.status)}
+    </div>
+  `).join('');
+
+  el.innerHTML = html;
 }
 
-/* ── Build DOM from data ── */
-function buildPage() {
-  /* Stack layers */
-  const stackDiagram = document.querySelector('.stack-diagram');
-  if (stackDiagram && data) {
-    const layers = [
-      data.stack_actual.frontend,
-      data.stack_actual.backend,
-      data.stack_actual.database,
-      data.stack_actual.container,
-      data.stack_actual.infra,
-    ];
-    stackDiagram.innerHTML = layers.map((l, i) => `
-      <div class="stack-layer">
-        <div class="stack-layer__icon">${l.icon}</div>
-        <div class="stack-layer__name">${l.name}</div>
-        ${l.version ? `<span class="stack-layer__version">v${l.version}</span>` : ''}
-      </div>
-      ${i < layers.length - 1 ? '<span class="stack-arrow">→</span>' : ''}
-    `).join('');
-  }
+/* Problem cards */
+function buildProblems() {
+  const el = document.getElementById('problems-grid');
+  if (!el || !D?.problems) return;
 
-  /* KPI counters (problem section) */
-  const problemMetrics = document.getElementById('problem-metrics');
-  if (problemMetrics && data) {
-    const m = data.problem_metrics;
-    problemMetrics.innerHTML = `
-      <div class="kpi-card">
-        <span class="kpi-value" data-counter="${m.aws_monthly_cost}" data-suffix="" id="ctr-aws">0</span>
-        <span class="kpi-label">Costo mensual AWS (USD)</span>
-        <span class="kpi-delta kpi-delta--down">↑ Sube cada mes</span>
-      </div>
-      <div class="kpi-card">
-        <span class="kpi-value" data-counter="${m.avg_latency_ms}" data-suffix="ms" id="ctr-lat">0ms</span>
-        <span class="kpi-label">Latencia promedio (usuarios CL)</span>
-        <span class="kpi-delta kpi-delta--down">↑ Alta para LatAm</span>
-      </div>
-      <div class="kpi-card">
-        <span class="kpi-value" data-counter="${m.uptime_pct}" data-suffix="%" id="ctr-up">0%</span>
-        <span class="kpi-label">Uptime reportado</span>
-        <span class="kpi-delta kpi-delta--down">↓ Bajo el SLA objetivo</span>
-      </div>
-      <div class="kpi-card">
-        <span class="kpi-value" data-counter="${m.deploy_time_min}" data-suffix="min" id="ctr-deploy">0min</span>
-        <span class="kpi-label">Tiempo de deploy</span>
-        <span class="kpi-delta kpi-delta--down">↑ Muy lento para iteración</span>
-      </div>
-    `;
-  }
-
-  /* Comparison table */
-  const compTable = document.querySelector('.compare-table tbody');
-  if (compTable && data) {
-    const rows = [
-      { label: 'Costo mensual (USD)', key: 'monthly_usd', fmt: v => `$${v.toLocaleString()}` },
-      { label: 'Latencia (Chile)', key: 'latency_ms', fmt: v => `~${v}ms` },
-      { label: 'Uptime SLA', key: 'uptime_pct', fmt: v => `${v}%` },
-      { label: 'Región LatAm', key: 'region_latam', fmt: v => v ? '<span class="check">✓</span>' : '<span class="cross">✗</span>' },
-      { label: 'Docker nativo', key: 'docker_native', fmt: v => v ? '<span class="check">✓</span>' : '<span class="cross">✗</span>' },
-      { label: 'MongoDB gestionado', key: 'mongodb_managed', fmt: v => v ? '<span class="check">✓</span>' : '<span class="cross">✗</span>' },
-      { label: 'Soporte', key: 'support', fmt: v => v },
-    ];
-
-    const providers = data.providers;
-    compTable.innerHTML = rows.map(row => `
-      <tr>
-        <td><strong>${row.label}</strong></td>
-        ${providers.map(p => `
-          <td class="${p.highlight ? 'highlight' : ''} ${p.current ? 'current-provider' : ''}">
-            ${row.fmt(p[row.key])}
-          </td>
-        `).join('')}
-      </tr>
-    `).join('');
-  }
-
-  /* Savings strip */
-  const savingsStrip = document.querySelector('.savings-strip');
-  if (savingsStrip && data) {
-    const s = data.savings;
-    savingsStrip.innerHTML = `
-      <div class="savings-stat">
-        <span class="savings-stat__value" data-counter="${s.savings_pct}" data-suffix="%" >0%</span>
-        <span class="savings-stat__label">Ahorro en infraestructura</span>
-      </div>
-      <div class="savings-stat">
-        <span class="savings-stat__value" data-counter="${s.savings_annual}" data-suffix="" >0</span>
-        <span class="savings-stat__label">USD ahorrados al año</span>
-      </div>
-      <div class="savings-stat">
-        <span class="savings-stat__value" data-counter="${s.proposed_annual}" data-suffix="" >0</span>
-        <span class="savings-stat__label">Nuevo costo anual (USD)</span>
-      </div>
-    `;
-  }
-
-  /* Migration timeline */
-  const migTimeline = document.querySelector('.migration-timeline');
-  if (migTimeline && data) {
-    migTimeline.innerHTML = data.migration_phases.map(phase => `
-      <div class="migration-phase fade-up">
-        <div class="migration-phase__number">${phase.phase}</div>
-        <div class="migration-phase__content">
-          <div class="migration-phase__title">${phase.title}</div>
-          <div class="migration-phase__duration">⏱ ${phase.duration}</div>
-          <div class="migration-phase__tasks">
-            ${phase.tasks.map(t => `<div class="migration-phase__task">${t}</div>`).join('')}
-          </div>
+  el.innerHTML = D.problems.map(p => `
+    <div class="card problem-card" data-sev="${p.severity === 'CRÍTICO' ? 'critical' : 'high'}">
+      <div class="flex justify-between items-start mb-5">
+        <div class="flex flex-col gap-2">
+          <span class="badge ${p.severity === 'CRÍTICO' ? 'badge--red' : 'badge--amber'}">${p.severity}</span>
+          <div class="h-sm">${p.icon} ${p.title}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-family:var(--font-display);font-size:2rem;font-weight:900;letter-spacing:-0.04em;color:${p.severity === 'CRÍTICO' ? 'var(--c-red)' : 'var(--c-amber)'};line-height:1">${p.metric}</div>
+          <div style="font-size:0.7rem;color:var(--c-text-3);margin-top:2px">${p.metricLabel}</div>
         </div>
       </div>
-    `).join('');
+      <p style="font-size:0.875rem;color:var(--c-text-2);line-height:1.7;margin-bottom:var(--sp-4)">${p.description}</p>
+      <div class="sev-bar">
+        <div class="sev-bar__fill ${p.fill > 60 ? 'sev-bar__fill--red' : 'sev-bar__fill--amber'}" data-w="${p.fill}"></div>
+      </div>
+      <div class="flex justify-between mt-2" style="font-size:0.7rem;color:var(--c-text-3)">
+        <span>0%</span><span>${p.fill}%</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* Comparison table */
+function buildComparisonTable() {
+  const tbody = document.getElementById('comp-tbody');
+  const thead = document.getElementById('comp-thead');
+  if (!tbody || !thead || !D?.comparison) return;
+
+  // Header
+  thead.innerHTML = `<tr>${D.comparison.headers.map(h => `<th>${h}</th>`).join('')}</tr>`;
+
+  // Highlight recommended column (index 1 = second column = Railway)
+  const recIdx = D.comparison.rows.findIndex(r => r.recommended);
+
+  // Re-build headers with highlight on recommended col
+  thead.innerHTML = `<tr>${D.comparison.headers.map((h, i) => {
+    if (i === recIdx + 1) return `<th class="rec">${h} ★</th>`;
+    return `<th>${h}</th>`;
+  }).join('')}</tr>`;
+
+  tbody.innerHTML = D.comparison.rows.map(row => {
+    const cls = row.recommended ? 'rec-row' : row.current ? 'current-row' : '';
+    const nameExtra = row.recommended
+      ? ` <span class="rec-marker">Recomendado</span>`
+      : row.current
+      ? ` <span class="badge badge--red" style="font-size:0.65rem">Actual</span>`
+      : '';
+
+    const tdCls = row.recommended ? 'rec' : '';
+
+    return `<tr class="${cls}">
+      <td class="row-name">${row.name}${nameExtra}</td>
+      <td class="${tdCls}">${row.ram}</td>
+      <td class="${tdCls}">${row.cpu}</td>
+      <td class="${tdCls}">${row.db}</td>
+      <td class="${tdCls}">${row.cicd  ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
+      <td class="${tdCls}">${row.docker ? '<span class="check">✓</span>' : '<span class="cross">✗</span>'}</td>
+      <td class="${tdCls}">${row.price}</td>
+      <td class="${tdCls}">${row.scale}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* Roadmap */
+function buildRoadmap() {
+  const el = document.getElementById('roadmap-list');
+  if (!el || !D?.roadmap) return;
+
+  el.innerHTML = D.roadmap.map((ph, i) => `
+    <div class="roadmap__item" data-idx="${i}">
+      <div class="roadmap__dot" style="background:${ph.color}"></div>
+      <div class="roadmap__weeks">${ph.weeks} · ${ph.title}</div>
+      <div class="roadmap__phase-pill" style="background:${ph.color}">
+        Fase ${ph.phase}: ${ph.title}
+      </div>
+      <div>
+        ${ph.tasks.map(t => `<div class="roadmap__task">${t}</div>`).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+/* Improvements */
+function buildImprovements() {
+  const el = document.getElementById('impr-grid');
+  if (!el || !D?.improvements) return;
+
+  el.innerHTML = D.improvements.map(item => `
+    <div class="impr-card">
+      <div class="impr-card__icon">${item.icon}</div>
+      <div class="impr-card__title">${item.title}</div>
+      <div class="impr-card__desc">${item.desc}</div>
+    </div>
+  `).join('');
+}
+
+/* Cost cards */
+function buildCostCards() {
+  renderCost('cost-current',  D?.costs?.current,  false);
+  renderCost('cost-proposed', D?.costs?.proposed, true);
+}
+
+function renderCost(id, data, highlighted) {
+  const el = document.getElementById(id);
+  if (!el || !data) return;
+
+  const rows = data.items.map(item => `
+    <div class="cost-row">
+      <span class="cost-row__name">${item.name}</span>
+      <span class="cost-row__val">${item.cost === 0 ? 'Gratis' : '$' + item.cost + '/mo'}</span>
+    </div>
+  `).join('');
+
+  el.className = `cost-card${highlighted ? ' cost-card--highlighted' : ''}`;
+  el.innerHTML = `
+    <div class="flex justify-between items-center mb-6">
+      <div style="font-family:var(--font-display);font-weight:800;font-size:1.1rem">${data.label}</div>
+      ${highlighted
+        ? `<span class="badge badge--green">Propuesto</span>`
+        : `<span class="badge badge--neutral">Actual</span>`}
+    </div>
+    ${rows}
+    <div class="cost-total">
+      <span class="cost-total__label">Total / mes</span>
+      <span class="cost-total__val">$${data.total}<span style="font-size:1rem;font-weight:500">/mo</span></span>
+    </div>
+    <p style="font-size:0.78rem;color:var(--c-text-3);margin-top:var(--sp-3)">${data.note}</p>
+  `;
+}
+
+/* ──────────────────────────────────────────
+   GSAP + ScrollTrigger
+   ────────────────────────────────────────── */
+function initGSAP() {
+  if (typeof gsap === 'undefined') { console.warn('[VeriSmart] GSAP not found'); return; }
+  gsap.registerPlugin(ScrollTrigger);
+
+  /* ── Generic fade-up ── */
+  gsap.utils.toArray('.gsap-up').forEach(el => {
+    gsap.fromTo(el,
+      { opacity: 0, y: 40 },
+      {
+        opacity: 1, y: 0,
+        duration: 0.85,
+        ease: 'power3.out',
+        scrollTrigger: { trigger: el, start: 'top 87%' }
+      }
+    );
+  });
+
+  /* ── Stagger children ── */
+  gsap.utils.toArray('.gsap-stagger').forEach(parent => {
+    gsap.fromTo(Array.from(parent.children),
+      { opacity: 0, y: 32 },
+      {
+        opacity: 1, y: 0,
+        stagger: 0.1,
+        duration: 0.7,
+        ease: 'power2.out',
+        scrollTrigger: { trigger: parent, start: 'top 82%' }
+      }
+    );
+  });
+
+  /* ── Problems: slide in from left ── */
+  gsap.fromTo('#problems-grid .card',
+    { opacity: 0, x: -24 },
+    {
+      opacity: 1, x: 0,
+      stagger: 0.12,
+      duration: 0.65,
+      ease: 'power2.out',
+      scrollTrigger: { trigger: '#problems-grid', start: 'top 82%' }
+    }
+  );
+
+  /* ── Stack layers stagger ── */
+  gsap.fromTo('#stack-diagram .stack-block',
+    { opacity: 0, x: 24 },
+    {
+      opacity: 1, x: 0,
+      stagger: 0.1,
+      duration: 0.6,
+      ease: 'power2.out',
+      scrollTrigger: { trigger: '#stack-diagram', start: 'top 80%' }
+    }
+  );
+
+  /* ── KPI section — PIN ── */
+  const kpiSec = document.querySelector('#section-kpis');
+  if (kpiSec) {
+    ScrollTrigger.create({
+      trigger: kpiSec,
+      start: 'top top',
+      end: '+=600',
+      pin: true,
+      scrub: 1,
+    });
+
+    gsap.fromTo('#section-kpis .kpi-card',
+      { opacity: 0, scale: 0.88, y: 16 },
+      {
+        opacity: 1, scale: 1, y: 0,
+        stagger: 0.12,
+        duration: 0.7,
+        ease: 'back.out(1.5)',
+        scrollTrigger: { trigger: '#section-kpis', start: 'top 70%' }
+      }
+    );
   }
 
-  /* Closing savings amount */
-  const closingAmount = document.querySelector('.closing-savings-amount');
-  if (closingAmount && data) {
-    closingAmount.dataset.counter = data.savings.savings_annual;
-    closingAmount.textContent = '0';
+  /* ── Table rows slide in ── */
+  gsap.fromTo('#comp-tbody tr',
+    { opacity: 0, x: -16 },
+    {
+      opacity: 1, x: 0,
+      stagger: 0.07,
+      duration: 0.5,
+      ease: 'power2.out',
+      scrollTrigger: { trigger: '#section-comparison', start: 'top 75%' }
+    }
+  );
+
+  /* ── Arch diagram boxes ── */
+  gsap.fromTo('#arch-boxes > *',
+    { opacity: 0, y: 20 },
+    {
+      opacity: 1, y: 0,
+      stagger: 0.15,
+      duration: 0.6,
+      ease: 'power2.out',
+      scrollTrigger: { trigger: '#arch-boxes', start: 'top 80%' }
+    }
+  );
+
+  /* ── Cost cards ── */
+  gsap.fromTo('#cost-current, #cost-proposed',
+    { opacity: 0, y: 30 },
+    {
+      opacity: 1, y: 0,
+      stagger: 0.18,
+      duration: 0.7,
+      ease: 'power2.out',
+      scrollTrigger: { trigger: '#section-costs', start: 'top 78%' }
+    }
+  );
+
+  /* ── Improvements grid ── */
+  gsap.fromTo('#impr-grid .impr-card',
+    { opacity: 0, y: 24 },
+    {
+      opacity: 1, y: 0,
+      stagger: 0.08,
+      duration: 0.6,
+      ease: 'power2.out',
+      scrollTrigger: { trigger: '#impr-grid', start: 'top 80%' }
+    }
+  );
+
+  /* ── Closing — PIN with logo entrance ── */
+  const closeSec = document.querySelector('#section-closing');
+  if (closeSec) {
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: closeSec,
+        start: 'top top',
+        end: '+=800',
+        pin: true,
+        scrub: 1,
+      }
+    });
+
+    tl.fromTo('.closing-mark',    { opacity: 0, scale: 0.75 }, { opacity: 1, scale: 1, duration: 0.35 })
+      .fromTo('.closing-sub',     { opacity: 0, y: 24 },        { opacity: 1, y: 0,    duration: 0.25 }, 0.25)
+      .fromTo('.closing-actions', { opacity: 0, y: 16 },        { opacity: 1, y: 0,    duration: 0.25 }, 0.45);
   }
 }
 
-/* ── Init ── */
-async function init() {
-  await loadData();
-  buildPage();
-
-  initProgressBar();
-  initCounters();
-  initVideoAutoplay();
-  initVideoHover();
-  initNav();
-  initSmoothScroll();
-  initChartOnScroll('cost-chart', createCostChart);
-
-  // Wait for GSAP to be available
-  if (window.gsap && window.ScrollTrigger) {
-    setupGSAP();
-  } else {
-    window.addEventListener('load', setupGSAP);
-  }
-}
-
+/* ──────────────────────────────────────────
+   Run
+   ────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', init);
